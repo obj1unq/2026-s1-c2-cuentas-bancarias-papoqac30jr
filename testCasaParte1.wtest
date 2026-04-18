@@ -1,9 +1,88 @@
 import casa.*
 
-describe "casa de pepe y julian" {
+describe "pruebas de gastos en la casa" {
+    test "prueba de gastos con cuenta corriente" {
+        casa.cuentaBancaria(cuentaCorriente)
+        cuentaCorriente.saldo(300)
+        assert.equals(0 , casa.gastado())
+        casa.gasto(200)
+        assert.equals(200 , casa.gastado())
+        assert.equals(100 , cuentaCorriente.saldo())
+        casa.gasto(400)
+        assert.equals(600 , casa.gastado())
+        assert.equals(-300 , cuentaCorriente.saldo())
+        casa.cambiarMes()
+        assert.equals(0 , casa.gastado())
+    }
 
-  // Descomentar si hiciera falta un metodo para inicializar el ambiente
-  // method initialize() {
-  // }
+    test "prueba de gastos con cuenta con gastos" {
+        cuentaConGastos.costoPorOperacion(20)
+        casa.cuentaBancaria(cuentaConGastos)
+        cuentaConGastos.depositar(1000)
+        assert.equals(980 , cuentaConGastos.saldo())
+        cuentaConGastos.extraer(580)
+        assert.equals(400 , cuentaConGastos.saldo())
+        cuentaConGastos.extraer(500)
+        assert.equals(-100 , cuentaConGastos.saldo())
+        cuentaConGastos.depositar(150)
+        assert.equals(30 , cuentaConGastos.saldo())
+    }
 
+    test "caso exepciona con cuenta con gastos" {
+        cuentaConGastos.costoPorOperacion(20)
+        assert.throwsException({cuentaConGastos.depositar(10)})
+        assert.equals(0 , cuentaConGastos.saldo())
+    }
+}
+
+describe "pruebas con gastos de cuenta combinadas" {
+    test "test con cuenta combinada" {
+        casa.cuentaBancaria(cuentaCombinada)
+        cuentaCombinada.cuentaPrincipal(cuentaConGastos)
+        cuentaCombinada.cuentaSecundaria(cuentaCorriente)
+        cuentaConGastos.costoPorOperacion(20)
+        cuentaConGastos.saldo(0)
+        cuentaCorriente.saldo(300)
+        cuentaCombinada.depositar(100)
+        assert.equals(380 , cuentaCombinada.saldo())
+        assert.equals(80 , cuentaConGastos.saldo())
+        casa.gasto(280)
+        assert.equals(280 , casa.gastado())
+        assert.equals(100 , cuentaCombinada.saldo())
+        assert.equals(0 , cuentaConGastos.saldo())
+        assert.equals(100 , cuentaCorriente.saldo())
+        assert.throwsException({cuentaCombinada.depositar(10)})
+        assert.equals(100 , cuentaCombinada.saldo())
+        assert.throwsException({casa.gasto(1000)})
+        assert.equals(280 , casa.gastado())
+        assert.equals(100 , cuentaCombinada.saldo())
+    }
+}
+
+describe "prueba con viveres y reparaciones de los viveres en la casa" {
+    test "prueba con viveres" {
+        casa.montoPorReparaciones(0)
+        casa.porcentajeViveres(30)
+        casa.cuentaBancaria(cuentaCorriente)
+        cuentaCorriente.saldo(2000)
+        casa.vivereRoto(1000)
+        assert.equals(false , casa.hayViveresSuficientes())
+        assert.equals(true , casa.hayQueReparar())
+        assert.equals(false , casa.estaEnOrden())
+        assert.throwsException({casa.comprarViveres(80, 2)})
+        assert.equals(30 , casa.porcentajeViveres())
+        assert.equals(2000 , cuentaCorriente.saldo())
+        assert.equals(0 , casa.gastado())
+        casa.comprarViveres(20, 2)
+        assert.equals(true , casa.hayViveresSuficientes())
+        assert.equals(50 , casa.porcentajeViveres())
+        assert.equals(false , casa.estaEnOrden())
+        assert.equals(1960 , cuentaCorriente.saldo())
+        assert.equals(40 , casa.gastado())
+        casa.reparaciones()
+        assert.equals(false , casa.hayQueReparar())
+        assert.equals(true , casa.estaEnOrden())
+        assert.equals(960 , cuentaCorriente.saldo())
+        assert.equals(1040 , casa.gastado())
+    }
 }
